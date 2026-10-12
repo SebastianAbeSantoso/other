@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler
 
-fire = pd.read_csv("fire.csv")
+pd.set_option("display.max_columns", None)
 
+fire = pd.read_csv("fire.csv")
 online = pd.read_csv("online.csv")
+
 for name, df in [("NASA FIRMS", fire), ("Online Shoppers", online)]:
     print(f"\n--- {name} ---")
     print("Shape:", df.shape)
@@ -204,6 +206,7 @@ print("Rows after duplicate removal:", len(online_cleaned))
 print("Duplicate rows remaining:", online_cleaned.duplicated().sum())
 print("Missing TotalPages:", online_cleaned["TotalPages"].isna().sum())
 print("Missing TotalDuration:", online_cleaned["TotalDuration"].isna().sum())
+
 features_to_validate = [
     "TotalPages",
     "TotalDuration",
@@ -260,21 +263,42 @@ online_cleaned[
 plt.tight_layout()
 plt.show()
 
-fire_final = fire.copy()
+fire_final = fire_encoded.copy()
+online_final = online_encoded.copy()
+
 fire_final["frp_log"] = np.log1p(fire_final["frp"])
 
-online_final = online_cleaned.copy()
+online_final["TotalDuration_log"] = np.log1p(
+    online_final["TotalDuration"]
+)
 online_final["TotalDuration_sqrt"] = np.sqrt(
     online_final["TotalDuration"]
 )
-
 online_final["PageValues_log"] = np.log1p(
     online_final["PageValues"]
+)
+
+fire_scale_cols = ["frp", "brightness", "bright_t31"]
+online_scale_cols = [
+    "Administrative_Duration",
+    "ProductRelated_Duration",
+    "PageValues",
+    "TotalDuration",
+]
+
+fire_scaler = RobustScaler()
+online_scaler = RobustScaler()
+
+fire_final[fire_scale_cols] = fire_scaler.fit_transform(
+    fire_final[fire_scale_cols]
+)
+online_final[online_scale_cols] = online_scaler.fit_transform(
+    online_final[online_scale_cols]
 )
 
 fire_final.to_csv("fire_transformed.csv", index=False)
 online_final.to_csv("online_transformed.csv", index=False)
 
-print("Final datasets saved successfully.")
 print("NASA FIRMS:", fire_final.shape)
 print("Online Shoppers:", online_final.shape)
+print("Saved both transformed datasets.")
