@@ -1,6 +1,10 @@
 import pandas as pd
 
-fire = pd.read_csv("fire.csv")
+try:
+    fire = pd.read_csv("fire.csv")
+except FileNotFoundError:
+    fire = pd.read_csv("fire_combined.csv")
+    
 online = pd.read_csv("online.csv")
 
 print("\n" + "=" * 70)
